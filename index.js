@@ -1,5 +1,17 @@
 let gameInterval; // Khai báo gameInterval ở phạm vi toàn cục
 let remainingGames = 0; // Biến lưu số lượt chơi còn lại
+let attempts = 0; // Số lần thử
+const maxAttempts = 10; // Số lần thử tối đa
+
+// Khôi phục số lần thử từ sessionStorage nếu có
+if (sessionStorage.getItem('attempts')) {
+  attempts = Number(sessionStorage.getItem('attempts'));
+}
+
+// Khôi phục số lượt chơi còn lại từ sessionStorage nếu có
+if (sessionStorage.getItem('remainingGames')) {
+  remainingGames = Number(sessionStorage.getItem('remainingGames'));
+}
 
 function sleep(time) {
   return new Promise((resolve) => setTimeout(resolve, time));
@@ -14,21 +26,21 @@ const clickElement = (element) => {
   element.dispatchEvent(event);
 };
 
-function findButtonPlayGame() {
-  const button = document.querySelector("[class^='Game_entry__playBtn']");
-  // if (button && button.textContent.trim().toLowerCase() === "chơi game") {
-  if (button) {
-    const style = window.getComputedStyle(button);
-    if (style.marginTop === '40px') {
-      return button;
-    }
-  }
-  return null;
+// Hàm mô phỏng nhấn phím F5
+function simulateF5() {
+  sessionStorage.setItem('attempts', attempts); // Lưu số lần thử vào sessionStorage
+  sessionStorage.setItem('remainingGames', remainingGames); // Lưu số lượt chơi còn lại
+  window.location.reload(); // Tải lại trang
 }
 
 function getNumberGame() {
   return Number(document.querySelector('.user-detail-attempts').textContent);
 }
+
+// Hàm kiểm tra sự tồn tại của class "boost_wrapper"
+const checkBoostWrapper = () => {
+  return document.querySelector('.boost_wrapper') !== null;
+};
 
 // Function để bắt đầu trò chơi
 function startGame() {
@@ -38,30 +50,55 @@ function startGame() {
   // Nếu còn nhiều hơn 0 lượt chơi và nhỏ hơn hoặc bằng 5, thì cho phép chơi hết các lượt còn lại
   if (numberOfGames > 0) {
     remainingGames = Math.min(numberOfGames, 5); // Giới hạn số lượt chơi không quá 5
+    sessionStorage.setItem('remainingGames', remainingGames); // Lưu số lượt chơi còn lại
+
     playNextGame(); // Bắt đầu chơi game
   } else {
     console.warn('Không còn lượt chơi nào.');
   }
 }
 
-function playNextGame() {
-  if (remainingGames > 0) {
-    console.log(`Bắt đầu lượt chơi, số lượt còn lại: ${remainingGames}`);
+async function playNextGame() {
+  if (attempts >= maxAttempts) {
+    console.warn('Đã thử quá số lần cho phép. Nhấn phím F5 để tải lại trang.');
+    simulateF5(); // Gọi hàm mô phỏng nhấn F5 nếu đã thử đủ số lần
+    return;
+  }
 
-    // Tìm nút "Play" và click vào
-    const playButton = document.querySelector('.game-item-button a');
-    if (playButton) {
-      console.log('Nhấn nút Play');
-      clickElement(playButton);
-      // Sau khi nhấn Play, bắt đầu chơi game
-      gameInterval = setInterval(() => {
-        main();
-      }, 400);
-    } else {
-      console.warn('Không tìm thấy nút Play!');
-    }
+  attempts++;
+  console.log(`Thử lần ${attempts}: Nhấn nút Play`);
+
+  const playButton = document.querySelector('.game-item-button a');
+  if (playButton) {
+    clickElement(playButton); // Nhấn nút Play
+    await sleep(1000); // Chờ một giây trước khi kiểm tra
+
+    // Kiểm tra nếu class "boost_wrapper" xuất hiện sau khi nhấn Play
+    const startTime = Date.now();
+
+    const checkBoostWrapperWithTimeout = async () => {
+      while (Date.now() - startTime < 2000) {
+        // Giới hạn trong 2 giây
+        if (checkBoostWrapper()) {
+          console.log('Đã tìm thấy class "boost_wrapper". Bắt đầu game.');
+          gameInterval = setInterval(() => {
+            main();
+          }, 400);
+          return; // Thoát nếu tìm thấy "boost_wrapper"
+        }
+        await sleep(100); // Kiểm tra lại sau mỗi 100ms
+      }
+
+      // Nếu sau 2 giây vẫn không tìm thấy "boost_wrapper", reload trang
+      console.warn(
+        'Không tìm thấy class "boost_wrapper" sau 2 giây, tải lại trang.'
+      );
+      simulateF5();
+    };
+
+    await checkBoostWrapperWithTimeout();
   } else {
-    console.log('Đã chơi hết tất cả các lượt.');
+    console.warn('Không tìm thấy nút Play!');
   }
 }
 
