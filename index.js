@@ -1,17 +1,15 @@
 let gameInterval; // Khai báo gameInterval ở phạm vi toàn cục
 let remainingGames = 0; // Biến lưu số lượt chơi còn lại
-let attempts = 0; // Số lần thử
-const maxAttempts = 10; // Số lần thử tối đa
 
 // Khôi phục số lần thử từ sessionStorage nếu có
-if (sessionStorage.getItem('attempts')) {
-  attempts = Number(sessionStorage.getItem('attempts'));
-}
+// if (sessionStorage.getItem('attempts')) {
+//   attempts = Number(sessionStorage.getItem('attempts'));
+// }
 
-// Khôi phục số lượt chơi còn lại từ sessionStorage nếu có
-if (sessionStorage.getItem('remainingGames')) {
-  remainingGames = Number(sessionStorage.getItem('remainingGames'));
-}
+// // Khôi phục số lượt chơi còn lại từ sessionStorage nếu có
+// if (sessionStorage.getItem('remainingGames')) {
+//   remainingGames = Number(sessionStorage.getItem('remainingGames'));
+// }
 
 function sleep(time) {
   return new Promise((resolve) => setTimeout(resolve, time));
@@ -28,8 +26,8 @@ const clickElement = (element) => {
 
 // Hàm mô phỏng nhấn phím F5
 function simulateF5() {
-  sessionStorage.setItem('attempts', attempts); // Lưu số lần thử vào sessionStorage
-  sessionStorage.setItem('remainingGames', remainingGames); // Lưu số lượt chơi còn lại
+  // sessionStorage.setItem('attempts', attempts); // Lưu số lần thử vào sessionStorage
+  // sessionStorage.setItem('remainingGames', remainingGames); // Lưu số lượt chơi còn lại
   window.location.reload(); // Tải lại trang
 }
 
@@ -59,47 +57,53 @@ function startGame() {
 }
 
 async function playNextGame() {
-  if (attempts >= maxAttempts) {
-    console.warn('Đã thử quá số lần cho phép. Nhấn phím F5 để tải lại trang.');
-    simulateF5(); // Gọi hàm mô phỏng nhấn F5 nếu đã thử đủ số lần
-    return;
-  }
+  let attempts = 0; // Số lần thử
+  const maxAttempts = 10; // Số lần thử tối đa
 
-  attempts++;
-  console.log(`Thử lần ${attempts}: Nhấn nút Play`);
+  // Hàm kiểm tra sự tồn tại của class "boost_wrapper"
+  const checkBoostWrapper = () => {
+    return document.querySelector('.boost_wrapper') !== null;
+  };
 
-  const playButton = document.querySelector('.game-item-button a');
-  if (playButton) {
-    clickElement(playButton); // Nhấn nút Play
-    await sleep(1000); // Chờ một giây trước khi kiểm tra
+  // Hàm thực hiện click và kiểm tra
+  async function tryClickPlay() {
+    if (attempts >= maxAttempts) {
+      console.warn('Đã thử quá số lần cho phép. Dừng lại.');
+      return;
+    }
 
-    // Kiểm tra nếu class "boost_wrapper" xuất hiện sau khi nhấn Play
-    const startTime = Date.now();
+    attempts++;
+    console.log(`Thử lần ${attempts}: Nhấn nút Play`);
+    await sleep(3000);
+    const playButton = document.querySelector('.game-item-button a');
+    if (playButton) {
+      clickElement(playButton); // Nhấn nút Play
+      await sleep(3000); // Chờ 3 giây trước khi kiểm tra
+      console.log('Chờ 3s kiểm tra Bắt đầu game.');
+      // Kiểm tra nếu class "boost_wrapper" xuất hiện sau khi nhấn Play
+      if (checkBoostWrapper()) {
+        console.log('Đã tìm thấy class "boost_wrapper". Bắt đầu game.');
+        gameInterval = setInterval(() => {
+          main();
+        }, 700);
+      } else {
+        console.warn('Không tìm thấy class "boost_wrapper", thử lại...');
+        //Go reward tab
+        clickElement(document.querySelector('.center-container a'));
+        await sleep(1000);
 
-    const checkBoostWrapperWithTimeout = async () => {
-      while (Date.now() - startTime < 2000) {
-        // Giới hạn trong 2 giây
-        if (checkBoostWrapper()) {
-          console.log('Đã tìm thấy class "boost_wrapper". Bắt đầu game.');
-          gameInterval = setInterval(() => {
-            main();
-          }, 400);
-          return; // Thoát nếu tìm thấy "boost_wrapper"
-        }
-        await sleep(100); // Kiểm tra lại sau mỗi 100ms
+        //Go reward tab
+        clickElement(document.querySelector('.main-menu a'));
+
+        await tryClickPlay(); // Thử lại nếu chưa tìm thấy
       }
-
-      // Nếu sau 2 giây vẫn không tìm thấy "boost_wrapper", reload trang
-      console.warn(
-        'Không tìm thấy class "boost_wrapper" sau 2 giây, tải lại trang.'
-      );
-      simulateF5();
-    };
-
-    await checkBoostWrapperWithTimeout();
-  } else {
-    console.warn('Không tìm thấy nút Play!');
+    } else {
+      console.warn('Không tìm thấy nút Play!');
+    }
   }
+
+  // Bắt đầu lần thử đầu tiên
+  await tryClickPlay();
 }
 
 function main() {
