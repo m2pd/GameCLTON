@@ -1,0 +1,2 @@
+- Open Console Telegram Game
+- Paste code and run
