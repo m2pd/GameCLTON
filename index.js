@@ -32,7 +32,9 @@ function simulateF5() {
 }
 
 function getNumberGame() {
-  return Number(document.querySelector('.user-detail-attempts').textContent);
+  return Number(
+    document.querySelectorAll('.user-stats-detail p')[1].textContent
+  );
 }
 
 // Hàm kiểm tra sự tồn tại của class "boost_wrapper"
@@ -44,11 +46,11 @@ const checkBoostWrapper = () => {
 function startGame() {
   const numberOfGames = getNumberGame(); // Lấy số lượt chơi còn lại
   console.log('Số lượt chơi ban đầu: ', numberOfGames);
-
-  // Nếu còn nhiều hơn 0 lượt chơi và nhỏ hơn hoặc bằng 5, thì cho phép chơi hết các lượt còn lại
+  clickElement(document.querySelector('a.menu-button[href="/games"]'));
+  // Nếu còn nhiều hơn 0 lượt chơi và nhỏ hơn hoặc bằng 10, thì cho phép chơi hết các lượt còn lại
   if (numberOfGames > 0) {
-    remainingGames = Math.min(numberOfGames, 5); // Giới hạn số lượt chơi không quá 5
-    sessionStorage.setItem('remainingGames', remainingGames); // Lưu số lượt chơi còn lại
+    remainingGames = Math.min(numberOfGames, 10); // Giới hạn số lượt chơi không quá 10
+    // sessionStorage.setItem('remainingGames', remainingGames); // Lưu số lượt chơi còn lại
 
     playNextGame(); // Bắt đầu chơi game
   } else {
@@ -75,10 +77,10 @@ async function playNextGame() {
     attempts++;
     console.log(`Thử lần ${attempts}: Nhấn nút Play`);
     await sleep(3000);
-    const playButton = document.querySelector('.game-item-button a');
+    const playButton = document.querySelector('button.game-item-link');
     if (playButton) {
       clickElement(playButton); // Nhấn nút Play
-      await sleep(3000); // Chờ 3 giây trước khi kiểm tra
+      await sleep(2000); // Chờ 2 giây trước khi kiểm tra
       console.log('Chờ 3s kiểm tra Bắt đầu game.');
       // Kiểm tra nếu class "boost_wrapper" xuất hiện sau khi nhấn Play
       if (checkBoostWrapper()) {
@@ -88,12 +90,12 @@ async function playNextGame() {
         }, 700);
       } else {
         console.warn('Không tìm thấy class "boost_wrapper", thử lại...');
-        //Go reward tab
-        clickElement(document.querySelector('.center-container a'));
+        //Go tab Home
+        clickElement(document.querySelector('a.menu-button[href="/"]'));
         await sleep(1000);
 
-        //Go reward tab
-        clickElement(document.querySelector('.main-menu a'));
+        //Go rtag game
+        clickElement(document.querySelector('a.menu-button[href="/games"]'));
 
         await tryClickPlay(); // Thử lại nếu chưa tìm thấy
       }
@@ -106,20 +108,76 @@ async function playNextGame() {
   await tryClickPlay();
 }
 
-function main() {
-  // Kiểm tra nếu có phần tử với class "claim-reward"
-  let rewardElement = document.querySelector('.claim-reward');
-  if (rewardElement) {
-    console.log('Game dừng lại vì có phần tử với class "claim-reward"');
-    clearInterval(gameInterval); // Dừng setInterval
-    clickElement(rewardElement);
+async function playNextGameRestart() {
+  let attempts = 0; // Số lần thử
+  const maxAttempts = 10; // Số lần thử tối đa
 
+  // Hàm kiểm tra sự tồn tại của class "boost_wrapper"
+  const checkBoostWrapper = () => {
+    return document.querySelector('.boost_wrapper') !== null;
+  };
+
+  // Hàm thực hiện click và kiểm tra
+  async function tryClickPlayAgain() {
+    if (attempts >= maxAttempts) {
+      console.warn('Đã thử quá số lần cho phép. Dừng lại.');
+      return;
+    }
+
+    attempts++;
+    console.log(`Thử lần ${attempts}: Nhấn nút Restart`);
+    await sleep(3000);
+    const playButton = document.querySelector('.tap-to-restart');
+    if (playButton) {
+      clickElement(playButton); // Nhấn nút Play
+      await sleep(2000); // Chờ 2 giây trước khi kiểm tra
+      console.log('Chờ 3s kiểm tra Bắt đầu game.');
+      // Kiểm tra nếu class "boost_wrapper" xuất hiện sau khi nhấn Play
+      if (checkBoostWrapper()) {
+        console.log('Đã tìm thấy class "boost_wrapper". Bắt đầu game.');
+        gameInterval = setInterval(() => {
+          main();
+        }, 700);
+      } else {
+        console.warn('Không tìm thấy class "boost_wrapper", thử lại...');
+        //Go tab Home
+        clickElement(document.querySelector('a.menu-button[href="/"]'));
+        await sleep(1000);
+
+        //Go rtag game
+        clickElement(document.querySelector('a.menu-button[href="/games"]'));
+
+        await tryClickPlayAgain(); // Thử lại nếu chưa tìm thấy
+      }
+    } else {
+      console.warn('Không tìm thấy nút Restart!');
+    }
+  }
+
+  // Bắt đầu lần thử đầu tiên
+  await tryClickPlayAgain();
+}
+
+async function main() {
+  // Kiểm tra nếu có phần tử với class "claim-reward"
+  let backElement = document.querySelector('.back-to-menu');
+  if (backElement) {
+    clearInterval(gameInterval); // Dừng setInterval
+    console.log('Game dừng lại vì có phần tử với class "claim-reward"');
+    // let bootReward = document.querySelector('.reward-badge.channel');
+    // if (bootReward) {
+    //   clickElement(bootReward);
+    // } else {
+    //   console.error('Phần tử không tồn tại.');
+    // }
+
+    sleep(3000);
     remainingGames--; // Giảm số lượt chơi còn lại
     console.log(`Lượt chơi còn lại: ${remainingGames}`);
 
     // Nếu còn lượt chơi, tiếp tục chơi lượt tiếp theo
     if (remainingGames > 0) {
-      setTimeout(playNextGame, 2000); // Đợi 2 giây trước khi bắt đầu lượt tiếp theo
+      setTimeout(playNextGameRestart, 2000); // Đợi 2 giây trước khi bắt đầu lượt tiếp theo
     } else {
       console.log('Đã chơi hết tất cả các lượt.');
     }
@@ -231,7 +289,7 @@ function getMatrixGame() {
   });
 
   // In ra ma trận sau khi cập nhật
-  console.table(game_matrix);
+  // console.table(game_matrix);
   return game_matrix;
 }
 
