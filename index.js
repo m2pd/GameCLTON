@@ -83,8 +83,8 @@ async function playNextGame() {
 
     attempts++;
     console.log(`Thử lần ${attempts}: Nhấn nút Play`);
-    await sleep(2000);
-    const playButton = document.querySelector('button.game-item-link');
+    await sleep(5000);
+    const playButton = document.querySelector('.game-item .game-item-link');
     if (playButton) {
       clickElement(playButton); // Nhấn nút Play
       await sleep(2000); // Chờ 2 giây trước khi kiểm tra
@@ -104,7 +104,7 @@ async function playNextGame() {
 
         //Go rtag game
         clickElement(document.querySelector('a.menu-button[href="/games"]'));
-
+        await sleep(2000);
         await tryClickPlay(); // Thử lại nếu chưa tìm thấy
       }
     } else {
@@ -124,11 +124,7 @@ async function main() {
     clearInterval(gameInterval); // Dừng setInterval
     console.log('Game dừng lại vì có phần tử với class "claim-reward"');
     let backMenu = document.querySelector('.back-to-menu');
-    if (backMenu) {
-      clickElement(backMenu);
-    } else {
-      console.error('Phần tử không tồn tại.');
-    }
+    clickElement(backMenu);
 
     await sleep(3000);
     remainingGames--; // Giảm số lượt chơi còn lại
@@ -326,6 +322,7 @@ function hamRutGonArray1DTheoRule2048(input) {
   }
   return b;
 }
+
 function hamGiaLap(game_matrix, direction) {
   let game_matrix_test = [
     [...game_matrix[0]],
