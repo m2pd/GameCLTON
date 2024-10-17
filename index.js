@@ -46,9 +46,9 @@ const checkBoostWrapper = () => {
 function startGame() {
   const numberOfGames = getNumberGame(); // Lấy số lượt chơi còn lại
   console.log('Số lượt chơi ban đầu: ', numberOfGames);
-  // Nếu còn nhiều hơn 0 lượt chơi và nhỏ hơn hoặc bằng 10, thì cho phép chơi hết các lượt còn lại
+  // Nếu còn nhiều hơn 0 lượt chơi và nhỏ hơn hoặc bằng numberOfGames, thì cho phép chơi hết các lượt còn lại
   if (numberOfGames > 0) {
-    remainingGames = Math.min(numberOfGames, 10); // Giới hạn số lượt chơi không quá 10
+    remainingGames = Math.min(numberOfGames, numberOfGames - 1); // Giới hạn số lượt chơi không quá numberOfGames
     // sessionStorage.setItem('remainingGames', remainingGames); // Lưu số lượt chơi còn lại
 
     playNextGame(); // Bắt đầu chơi game
