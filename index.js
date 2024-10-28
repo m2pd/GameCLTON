@@ -124,8 +124,11 @@ async function main() {
     clearInterval(gameInterval); // Dừng setInterval
     console.log('Game dừng lại vì có phần tử với class "claim-reward"');
     let bootReward = document.querySelector('.reward-badge.channel');
-    clickElement(bootReward);
+    if (bootReward) {
+      clickElement(bootReward);
+    }
     await sleep(1000);
+
     clickElement(backElement);
 
     await sleep(3000);
