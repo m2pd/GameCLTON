@@ -123,8 +123,10 @@ async function main() {
   if (backElement) {
     clearInterval(gameInterval); // Dừng setInterval
     console.log('Game dừng lại vì có phần tử với class "claim-reward"');
-    let backMenu = document.querySelector('.back-to-menu');
-    clickElement(backMenu);
+    let bootReward = document.querySelector('.reward-badge.channel');
+    clickElement(bootReward);
+    await sleep(1000);
+    clickElement(backElement);
 
     await sleep(3000);
     remainingGames--; // Giảm số lượt chơi còn lại
