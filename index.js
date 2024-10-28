@@ -127,8 +127,6 @@ async function main() {
     if (bootReward) {
       clickElement(bootReward);
     }
-    await sleep(1000);
-
     clickElement(backElement);
 
     await sleep(3000);
