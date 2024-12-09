@@ -84,7 +84,7 @@ async function playNextGame() {
     attempts++;
     console.log(`Thử lần ${attempts}: Nhấn nút Play`);
     await sleep(5000);
-    const playButton = document.querySelector('.game-item .game-item-link');
+    const playButton = document.querySelectorAll('.game-item .game-item-link')[1];
     if (playButton) {
       clickElement(playButton); // Nhấn nút Play
       await sleep(2000); // Chờ 2 giây trước khi kiểm tra
